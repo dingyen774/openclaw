@@ -62,4 +62,12 @@ USER node
 # For container platforms requiring external health checks:
 #   1. Set OPENCLAW_GATEWAY_TOKEN or OPENCLAW_GATEWAY_PASSWORD env var
 #   2. Override CMD: ["node","openclaw.mjs","gateway","--allow-unconfigured","--bind","lan"]
+
+# Install Python pip
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-pip
+
+# Install Python dependencies and Playwright browser
+RUN pip3 install -r requirements.txt && \
+    python3 -m playwright install chromium
 CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]
