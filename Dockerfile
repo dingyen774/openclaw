@@ -62,13 +62,19 @@ USER node
 # For container platforms requiring external health checks:
 #   1. Set OPENCLAW_GATEWAY_TOKEN or OPENCLAW_GATEWAY_PASSWORD env var
 #   2. Override CMD: ["node","openclaw.mjs","gateway","--allow-unconfigured","--bind","lan"]
-# 切換成管理員身分來安裝系統套件
-USER root
-# Install Python pip
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-pip
+# Install Python with virtual environment  
+USER root  
+RUN apt-get update && \  
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 python3-venv python3-pip && \  
+    apt-get clean && \  
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*  
+# Create and activate virtual environment  
+RUN python3 -m venv /opt/venv  
+ENV PATH="/opt/venv/bin:$PATH"  
+# Install Python dependencies and Playwright browser in virtual environment  
+RUN pip install --upgrade pip setuptools wheel && \  
+    pip install -r requirements.txt && \  
+    python3 -m playwright install chromium  
+USER node  
+CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]  
 
-# Install Python dependencies and Playwright browser
-RUN pip3 install -r requirements.txt && \
-    python3 -m playwright install chromium
-CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]
