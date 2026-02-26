@@ -39,4 +39,5 @@ ENV NODE_ENV=production
 USER root  
 RUN mkdir -p /home/node/.openclaw && chown -R node:node /home/node/.openclaw  
 USER node  
-CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]  
+CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]  
+
