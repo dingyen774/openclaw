@@ -76,5 +76,9 @@ RUN pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt && \  
     python3 -m playwright install chromium  
 USER node  
+USER root  
+RUN mkdir -p /home/node/.openclaw && chown -R node:node /home/node/.openclaw  
+USER node  
 CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]  
+ 
 
