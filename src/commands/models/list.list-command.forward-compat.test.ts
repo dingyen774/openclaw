@@ -156,4 +156,28 @@ describe("modelsListCommand forward-compat", () => {
       }),
     );
   });
+
+  it("exits with an error when configured-mode listing has no model registry", async () => {
+    vi.clearAllMocks();
+    const previousExitCode = process.exitCode;
+    process.exitCode = undefined;
+    mocks.loadModelRegistry.mockResolvedValueOnce({
+      models: [],
+      availableKeys: new Set<string>(),
+      registry: undefined,
+    });
+    const runtime = { log: vi.fn(), error: vi.fn() };
+    let observedExitCode: number | undefined;
+
+    try {
+      await modelsListCommand({ json: true }, runtime as never);
+      observedExitCode = process.exitCode;
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+
+    expect(runtime.error).toHaveBeenCalledWith("Model registry unavailable.");
+    expect(observedExitCode).toBe(1);
+    expect(mocks.printModelTable).not.toHaveBeenCalled();
+  });
 });

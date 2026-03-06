@@ -1,7 +1,8 @@
 import type { StreamFn } from "@mariozechner/pi-agent-core";
 import type { Context, Model, SimpleStreamOptions } from "@mariozechner/pi-ai";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { applyExtraParamsToAgent, resolveExtraParams } from "./pi-embedded-runner.js";
+import { log } from "./pi-embedded-runner/logger.js";
 
 describe("resolveExtraParams", () => {
   it("returns undefined with no model config", () => {
@@ -1322,6 +1323,40 @@ describe("applyExtraParamsToAgent", () => {
       } as unknown as Model<"openai-responses">,
     });
     expect(payload).not.toHaveProperty("service_tier");
+  });
+
+  it("warns and skips service_tier injection for invalid serviceTier values", () => {
+    const warnSpy = vi.spyOn(log, "warn").mockImplementation(() => undefined);
+    try {
+      const payload = runResponsesPayloadMutationCase({
+        applyProvider: "openai",
+        applyModelId: "gpt-5.4",
+        cfg: {
+          agents: {
+            defaults: {
+              models: {
+                "openai/gpt-5.4": {
+                  params: {
+                    serviceTier: "invalid",
+                  },
+                },
+              },
+            },
+          },
+        },
+        model: {
+          api: "openai-responses",
+          provider: "openai",
+          id: "gpt-5.4",
+          baseUrl: "https://api.openai.com/v1",
+        } as unknown as Model<"openai-responses">,
+      });
+
+      expect(payload).not.toHaveProperty("service_tier");
+      expect(warnSpy).toHaveBeenCalledWith("ignoring invalid OpenAI service tier param: invalid");
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 
   it("does not force store for OpenAI Responses routed through non-OpenAI base URLs", () => {

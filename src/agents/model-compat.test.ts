@@ -295,6 +295,21 @@ describe("resolveForwardCompatModel", () => {
     expect(model?.maxTokens).toBe(128_000);
   });
 
+  it("resolves openai gpt-5.4 without templates using normalized fallback defaults", () => {
+    const registry = createRegistry({});
+
+    const model = resolveForwardCompatModel("openai", "gpt-5.4", registry);
+
+    expectResolvedForwardCompat(model, { provider: "openai", id: "gpt-5.4" });
+    expect(model?.api).toBe("openai-responses");
+    expect(model?.baseUrl).toBe("https://api.openai.com/v1");
+    expect(model?.input).toEqual(["text", "image"]);
+    expect(model?.reasoning).toBe(true);
+    expect(model?.contextWindow).toBe(1_050_000);
+    expect(model?.maxTokens).toBe(128_000);
+    expect(model?.cost).toEqual({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
+  });
+
   it("resolves openai gpt-5.4-pro via template fallback", () => {
     const registry = createRegistry({
       "openai/gpt-5.2": createOpenAITemplateModel("gpt-5.2"),
